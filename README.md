@@ -4,7 +4,7 @@
 
 Tezos Base58 hash-encodings, including common prefixes, based on the Digestif library (Js-of-OCaml compliant).
 
-This project is mostly developed in a monorepo at <https://gitlab.com/smondet/flextesa-tzcomet-monorepo/>.
+This project is mostly developed in a monorepo at <https://gitlab.com/oxheadalpha/flextesa-tzcomet-monorepo/>.
 
 ## Install
 
