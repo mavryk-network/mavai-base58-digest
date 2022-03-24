@@ -1,0 +1,7 @@
+build:
+  image: ocaml/opam:alpine-3.15-ocaml-4.13
+  script:
+    - sudo cp /usr/bin/opam-2.1 /usr/bin/opam
+    - sudo apk update
+    - opam exec -- opam install --with-test --with-doc ./tezai-base58-digest.opam
+
