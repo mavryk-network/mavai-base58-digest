@@ -21,6 +21,7 @@
   (license "MIT")
   (depends
     (digestif (>= "0.9.0"))
+    zarith
     (ppx_expect (>= "0.14.0"))
     (ppx_inline_test (>= "0.14.0"))
   )
