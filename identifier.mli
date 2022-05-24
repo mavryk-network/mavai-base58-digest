@@ -49,3 +49,20 @@ end
 module Ed25519 : Signer
 module Secp256k1 : Signer
 module P256 : Signer
+
+module Generic_signer : sig
+  val all : (module Signer) list
+
+  module Public_key : sig
+    type t
+
+    val of_base58 : string -> t
+  end
+
+  module Public_key_hash : sig
+    type t
+
+    val of_public_key : Public_key.t -> t
+    val to_base58 : t -> string
+  end
+end

@@ -340,3 +340,35 @@ module P256 = struct
         ->p2sk2PGjcuzCndQ5WavEB42Mxt2eagzrfivs5vXxycHFNzkobDygcA |}] ;
     ()
 end
+
+module Generic_signer = struct
+  type 'a t = (module Signer) * 'a
+
+  let all : (module Signer) list =
+    [(module Ed25519); (module Secp256k1); (module P256)]
+
+  module Public_key = struct
+    type nonrec t = string t
+
+    let of_base58 (s : Raw.base58) : t =
+      List.find_map all ~f:(fun (module Sg : Signer) ->
+          match Sg.Public_key.decode s with
+          | s -> Some ((module Sg : Signer), s)
+          | exception _ -> None )
+      |> function
+      | Some s -> s
+      | None ->
+          Format.kasprintf failwith "Public_key.of_base58: could not decode %S"
+            s
+  end
+
+  module Public_key_hash = struct
+    type nonrec t = string t
+
+    let of_public_key (((module Sg), pk) : Public_key.t) : t =
+      ((module Sg : Signer), Sg.Public_key_hash.hash_string pk)
+
+    let to_base58 (((module Sg), pkh) : t) : Raw.base58 =
+      Sg.Public_key_hash.encode pkh
+  end
+end
