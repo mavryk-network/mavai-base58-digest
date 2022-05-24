@@ -45,3 +45,14 @@ module Ed25519 : sig
 
   module Signature : Base58_identifier
 end
+
+module Secp256k1 : sig
+  module Secret_key : Base58_identifier
+  module Public_key : Base58_identifier
+
+  module Public_key_hash : sig
+    include Base58_hash_identifier
+  end
+
+  module Signature : Base58_identifier
+end

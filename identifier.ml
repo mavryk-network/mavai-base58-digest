@@ -211,3 +211,62 @@ module Ed25519 = struct
     include Base58_prefixed (struct let prefix = Prefix.ed25519_signature end)
   end
 end
+
+module Secp256k1 = struct
+  module Secret_key = struct
+    include Base58_prefixed (struct
+      let prefix = Prefix.secp256k1_secret_key
+    end)
+  end
+
+  module Public_key = struct
+    include Base58_prefixed (struct
+      let prefix = Prefix.secp256k1_public_key
+    end)
+  end
+
+  module Public_key_hash = struct
+    include Base58_hash (struct
+      let prefix = Prefix.secp256k1_public_key_hash let size = 20
+    end)
+  end
+
+  module Signature = struct
+    include Base58_prefixed (struct let prefix = Prefix.secp256k1_signature end)
+  end
+
+  let%expect_test _ =
+    let open Printf in
+    let module M = struct
+      module type Codec = sig
+        val encode : string -> string val decode : string -> string
+      end
+    end in
+    let print_check_0 (module C : M.Codec) s =
+      let d = C.decode s in
+      let e = C.encode d in
+      assert (String.equal s e) ;
+      printf "->%S\n->%s\n" d e in
+    print_check_0
+      (module Public_key_hash)
+      "tz2SNzXqBQRgyaUSnW5LrKkGKs9EyiRnbQXT" ;
+    [%expect
+      {|
+        ->"\198(\"!\246a\003:\004\156\029D\179\202\025\240\247\192;\149"
+        ->tz2SNzXqBQRgyaUSnW5LrKkGKs9EyiRnbQXT |}] ;
+    print_check_0
+      (module Public_key)
+      "sppk7asaMpcW2Sqo4iftKn5bXYcsqyJ9CktTuqPss2oCWkbB9QHTrjR" ;
+    [%expect
+      {|
+        ->"\002\206}bP\180\226\206\173\004\146\023I\202\186\r\154\0007\160V\004\198\161\162U\016\136\242\225\006\2455"
+        ->sppk7asaMpcW2Sqo4iftKn5bXYcsqyJ9CktTuqPss2oCWkbB9QHTrjR |}] ;
+    print_check_0
+      (module Secret_key)
+      "spsk1qg2jd5SBa2TyiUT3jERCD95bdSuuhJAt75ZYrzRC1VnWb3tg7" ;
+    [%expect
+      {|
+        ->"6\190V>,\205$\203\128-p\"\138\197M4w\2177\161*\219\017O\227\255\243\134\165\007\211\232"
+        ->spsk1qg2jd5SBa2TyiUT3jERCD95bdSuuhJAt75ZYrzRC1VnWb3tg7 |}] ;
+    ()
+end
