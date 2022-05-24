@@ -192,6 +192,17 @@ module Protocol_hash = struct
   end)
 end
 
+module type Signer = sig
+  module Secret_key : Base58_identifier
+  module Public_key : Base58_identifier
+
+  module Public_key_hash : sig
+    include Base58_hash_identifier
+  end
+
+  module Signature : Base58_identifier
+end
+
 module Ed25519 = struct
   module Secret_key = struct
     include Base58_prefixed (struct let prefix = Prefix.ed25519_seed end)
@@ -268,5 +279,60 @@ module Secp256k1 = struct
       {|
         ->"6\190V>,\205$\203\128-p\"\138\197M4w\2177\161*\219\017O\227\255\243\134\165\007\211\232"
         ->spsk1qg2jd5SBa2TyiUT3jERCD95bdSuuhJAt75ZYrzRC1VnWb3tg7 |}] ;
+    ()
+end
+
+module P256 = struct
+  module Secret_key = struct
+    include Base58_prefixed (struct let prefix = Prefix.p256_secret_key end)
+  end
+
+  module Public_key = struct
+    include Base58_prefixed (struct let prefix = Prefix.p256_public_key end)
+  end
+
+  module Public_key_hash = struct
+    include Base58_hash (struct
+      let prefix = Prefix.p256_public_key_hash let size = 20
+    end)
+  end
+
+  module Signature = struct
+    include Base58_prefixed (struct let prefix = Prefix.p256_signature end)
+  end
+
+  let%expect_test _ =
+    let open Printf in
+    let module M = struct
+      module type Codec = sig
+        val encode : string -> string val decode : string -> string
+      end
+    end in
+    let print_check_0 (module C : M.Codec) s =
+      let d = C.decode s in
+      let e = C.encode d in
+      assert (String.equal s e) ;
+      printf "->%S\n->%s\n" d e in
+    print_check_0
+      (module Public_key_hash)
+      "tz3P8xF6hbjXw1SUY5gT3yYvLY5gQfZbhEpP" ;
+    [%expect
+      {|
+        ->"\030\207QP\192\163\200J\\\157EE\157\144M\170(\164e\161"
+        ->tz3P8xF6hbjXw1SUY5gT3yYvLY5gQfZbhEpP |}] ;
+    print_check_0
+      (module Public_key)
+      "p2pk67zrpWCT1ihu7zyG7p89UN6w8MkYN9mZ8nMZexf6WPVFXQz3BGP" ;
+    [%expect
+      {|
+        ->"\003\195*\135\135:\001\019\020`0\129\233op\224J\019\168r\139:\231\220\215\0266\133\183\1987F\029"
+        ->p2pk67zrpWCT1ihu7zyG7p89UN6w8MkYN9mZ8nMZexf6WPVFXQz3BGP |}] ;
+    print_check_0
+      (module Secret_key)
+      "p2sk2PGjcuzCndQ5WavEB42Mxt2eagzrfivs5vXxycHFNzkobDygcA" ;
+    [%expect
+      {|
+        ->"\005\162xK\183\236\247\145\175'/\176,\191V|A\152\149H\234\235%\167\169\219Zj\rd'\160"
+        ->p2sk2PGjcuzCndQ5WavEB42Mxt2eagzrfivs5vXxycHFNzkobDygcA |}] ;
     ()
 end
