@@ -26,7 +26,11 @@ struct
   let decode s =
     let whole = Raw.String.of_base58 s in
     let prelen = String.length prefix in
-    String.sub whole ~pos:prelen ~len:(String.length whole - prelen)
+    if String.equal prefix (String.sub whole ~pos:0 ~len:prelen) then
+      String.sub whole ~pos:prelen ~len:(String.length whole - prelen)
+    else
+      Format.kasprintf failwith "decode: wrong prefix %S Vs %S" prefix
+        (String.sub whole ~pos:0 ~len:prelen)
 end
 
 module Base58_hash (Parameters : sig
