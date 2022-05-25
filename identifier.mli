@@ -56,7 +56,9 @@ module Generic_signer : sig
   module Public_key : sig
     type t
 
-    val of_base58 : string -> t
+    val of_bytes : bytes -> t
+    val of_base58 : Raw.base58 -> t
+    val to_base58 : t -> Raw.base58
   end
 
   module Public_key_hash : sig

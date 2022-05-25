@@ -350,6 +350,16 @@ module Generic_signer = struct
   module Public_key = struct
     type nonrec t = string t
 
+    let of_bytes s : t =
+      let chop s = Bytes.sub_string s 1 (Bytes.length s - 1) in
+      match Bytes.get s 0 with
+      | '\x00' -> ((module Ed25519), chop s)
+      | '\x01' -> ((module Secp256k1), chop s)
+      | '\x02' -> ((module P256), chop s)
+      | c ->
+          Format.kasprintf failwith "public key magic number not recognized: %C"
+            c
+
     let of_base58 (s : Raw.base58) : t =
       List.find_map all ~f:(fun (module Sg : Signer) ->
           match Sg.Public_key.decode s with
@@ -360,6 +370,8 @@ module Generic_signer = struct
       | None ->
           Format.kasprintf failwith "Public_key.of_base58: could not decode %S"
             s
+
+    let to_base58 (((module Sg), pk) : t) : Raw.base58 = Sg.Public_key.encode pk
   end
 
   module Public_key_hash = struct
