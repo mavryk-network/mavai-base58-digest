@@ -383,4 +383,20 @@ module Generic_signer = struct
     let to_base58 (((module Sg), pkh) : t) : Raw.base58 =
       Sg.Public_key_hash.encode pkh
   end
+
+  module Signature = struct
+    type nonrec t = string t
+
+    let of_base58 (s : Raw.base58) : t =
+      List.find_map all ~f:(fun (module Sg : Signer) ->
+          match Sg.Signature.decode s with
+          | s -> Some ((module Sg : Signer), s)
+          | exception _ -> None )
+      |> function
+      | Some s -> s
+      | None ->
+          Format.kasprintf failwith "Signature.of_base58: could not decode %S" s
+
+    let to_bytes : t -> string = fun (_, s) -> s
+  end
 end
