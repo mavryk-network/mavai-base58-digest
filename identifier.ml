@@ -400,3 +400,51 @@ module Generic_signer = struct
     let to_bytes : t -> string = fun (_, s) -> s
   end
 end
+
+module Address = struct
+  type t = Kt1 of string | Pkh of Generic_signer.Public_key_hash.t
+
+  let of_bytes s : t =
+    let chop s = Bytes.sub_string s 2 (Bytes.length s - 2) in
+    match Bytes.sub_string s 0 2 with
+    | "\x01\x1c" -> Kt1 (chop s)
+    | "\x00\x00" -> Pkh ((module Ed25519), chop s)
+    | "\x00\x01" -> Pkh ((module Secp256k1), chop s)
+    | "\x00\x02" -> Pkh ((module P256), chop s)
+    | other ->
+        Format.kasprintf failwith "Address magic number not recognized: %S"
+          other
+
+  let to_base58 = function
+    | Kt1 s -> Kt1_address.encode s
+    | Pkh pkh -> Generic_signer.Public_key_hash.to_base58 pkh
+
+  let%expect_test _ =
+    let open Printf in
+    let bytes_of_hex s =
+      let rec go b = function
+        | "" -> Buffer.to_bytes b
+        | more ->
+            Scanf.sscanf more "%02x%s" (fun code more ->
+                Buffer.add_int8 b code ; go b more ) in
+      go (Buffer.create 40) s in
+    let print_check_0 hex =
+      let e = to_base58 (of_bytes (bytes_of_hex hex)) in
+      printf "->0x%s\n->%s\n" hex e in
+    print_check_0 "00006ca63af795024a42b1b1875b24c2fc7f4376b23c" ;
+    [%expect
+      {|
+        ->0x00006ca63af795024a42b1b1875b24c2fc7f4376b23c
+        ->tz1VYWoiunmeTe2CN7LZigbERFfekrtymKoy |}] ;
+    print_check_0 "0001c6282221f661033a049c1d44b3ca19f0f7c03b95" ;
+    [%expect
+      {|
+        ->0x0001c6282221f661033a049c1d44b3ca19f0f7c03b95
+        ->tz2SNzXqBQRgyaUSnW5LrKkGKs9EyiRnbQXT |}] ;
+    print_check_0 "0002798a0ad8e4956c6afba177f19ae41b6b169a6145" ;
+    [%expect
+      {|
+        ->0x0002798a0ad8e4956c6afba177f19ae41b6b169a6145
+        ->tz3XQgkE3jTFP9RhadxKHW6LZmiGqiN95uWy |}] ;
+    ()
+end

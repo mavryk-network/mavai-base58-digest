@@ -75,3 +75,10 @@ module Generic_signer : sig
     val to_bytes : t -> string
   end
 end
+
+module Address : sig
+  type t = Kt1 of string | Pkh of Generic_signer.Public_key_hash.t
+
+  val of_bytes : bytes -> t
+  val to_base58 : t -> string
+end
