@@ -405,15 +405,26 @@ module Address = struct
   type t = Kt1 of string | Pkh of Generic_signer.Public_key_hash.t
 
   let of_bytes s : t =
-    let chop s = Bytes.sub_string s 2 (Bytes.length s - 2) in
-    match Bytes.sub_string s 0 2 with
-    | "\x01\x1c" -> Kt1 (chop s)
-    | "\x00\x00" -> Pkh ((module Ed25519), chop s)
-    | "\x00\x01" -> Pkh ((module Secp256k1), chop s)
-    | "\x00\x02" -> Pkh ((module P256), chop s)
-    | other ->
-        Format.kasprintf failwith "Address magic number not recognized: %S"
-          other
+    (* See ["./tezos-codec describe alpha.contract binary schema"] *)
+    match Bytes.get s 0 with
+    | '\x01' ->
+        Kt1
+          (Bytes.sub_string s 1
+             (Bytes.length s - 2) (* <- the padding is at the end *) )
+    | '\x00' -> (
+        let chop s = Bytes.sub_string s 2 (Bytes.length s - 2) in
+        match Bytes.get s 1 with
+        | '\xbc' -> Kt1 (chop s)
+        | '\x00' -> Pkh ((module Ed25519), chop s)
+        | '\x01' -> Pkh ((module Secp256k1), chop s)
+        | '\x02' -> Pkh ((module P256), chop s)
+        | _ ->
+            Format.kasprintf failwith
+              "Address/TZ 2nd magic number not recognized: %S"
+              (Bytes.to_string s) )
+    | _ ->
+        Format.kasprintf failwith "Address 1st magic number not recognized: %S"
+          (Bytes.to_string s)
 
   let to_base58 = function
     | Kt1 s -> Kt1_address.encode s
@@ -446,5 +457,10 @@ module Address = struct
       {|
         ->0x0002798a0ad8e4956c6afba177f19ae41b6b169a6145
         ->tz3XQgkE3jTFP9RhadxKHW6LZmiGqiN95uWy |}] ;
+    print_check_0 "01bc547d8187e0bc39ea403195ebb3cd1ef5a1849d00" ;
+    [%expect
+      {|
+        ->0x01bc547d8187e0bc39ea403195ebb3cd1ef5a1849d00
+        ->KT1RkZpKFkwjWTRL4Vyqnwpzh83q6ipi6zvT |}] ;
     ()
 end
