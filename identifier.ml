@@ -351,11 +351,22 @@ module Generic_signer = struct
     type nonrec t = string t
 
     let of_bytes s : t =
-      let chop s = Bytes.sub_string s 1 (Bytes.length s - 1) in
+      let lgth = Bytes.length s in
+      let check_lgth n =
+        if lgth <> n then
+          Format.kasprintf failwith
+            "Public_key.of_bytes: length must be %d bytes, not %d." n lgth in
+      let chop s = Bytes.sub_string s 1 (lgth - 1) in
       match Bytes.get s 0 with
-      | '\x00' -> ((module Ed25519), chop s)
-      | '\x01' -> ((module Secp256k1), chop s)
-      | '\x02' -> ((module P256), chop s)
+      | '\x00' ->
+          check_lgth 33 ;
+          ((module Ed25519), chop s)
+      | '\x01' ->
+          check_lgth 34 ;
+          ((module Secp256k1), chop s)
+      | '\x02' ->
+          check_lgth 34 ;
+          ((module P256), chop s)
       | c ->
           Format.kasprintf failwith "public key magic number not recognized: %C"
             c
@@ -372,6 +383,38 @@ module Generic_signer = struct
             s
 
     let to_base58 (((module Sg), pk) : t) : Raw.base58 = Sg.Public_key.encode pk
+
+    let%expect_test _ =
+      let open Printf in
+      let bytes_of_hex s =
+        let rec go b = function
+          | "" -> Buffer.to_bytes b
+          | more ->
+              Scanf.sscanf more "%02x%s" (fun code more ->
+                  Buffer.add_int8 b code ; go b more ) in
+        go (Buffer.create 40) s in
+      let print_check_0 hex =
+        let e = to_base58 (of_bytes (bytes_of_hex hex)) in
+        printf "->0x%s\n->%s\n" hex e in
+      print_check_0
+        "00d670f72efd9475b62275fae773eb5f5eb1fea4f2a0880e6d21983273bf95a0af" ;
+      [%expect
+        {|
+        ->0x00d670f72efd9475b62275fae773eb5f5eb1fea4f2a0880e6d21983273bf95a0af
+        ->edpkvGfYw3LyB1UcCahKQk4rF2tvbMUk8GFiTuMjL75uGXrpvKXhjn |}] ;
+      print_check_0
+        "010227ad543e5213d44e3e1595e5c43e308a05a1c9f816d1a870631a43418d606159" ;
+      [%expect
+        {|
+        ->0x010227ad543e5213d44e3e1595e5c43e308a05a1c9f816d1a870631a43418d606159
+        ->sppk7Zc7MRN3zTXEZ5QVp7yWcM2YhVyRUQqfBhxA25Ebxz3wbiuA1qa |}] ;
+      print_check_0
+        "02022ca01ff53a224ced334a41979f96b97c307f951ffdea36433ee24b5fc6a9588e" ;
+      [%expect
+        {|
+        ->0x02022ca01ff53a224ced334a41979f96b97c307f951ffdea36433ee24b5fc6a9588e
+        ->p2pk64upHUAeH6wNh5BgwTrnVVM6aU9zbSdmgoeDVkax46d8T4C7MsC |}] ;
+      ()
   end
 
   module Public_key_hash = struct
