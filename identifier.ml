@@ -406,15 +406,13 @@ module Address = struct
 
   let of_bytes s : t =
     (* See ["./tezos-codec describe alpha.contract binary schema"] *)
+    let lgth = Bytes.length s in
     match Bytes.get s 0 with
-    | '\x01' ->
-        Kt1
-          (Bytes.sub_string s 1
-             (Bytes.length s - 2) (* <- the padding is at the end *) )
-    | '\x00' -> (
+    | '\x01' when lgth = 22 ->
+        Kt1 (Bytes.sub_string s 1 (lgth - 2) (* <- the padding is at the end *))
+    | '\x00' when lgth = 22 -> (
         let chop s = Bytes.sub_string s 2 (Bytes.length s - 2) in
         match Bytes.get s 1 with
-        | '\xbc' -> Kt1 (chop s)
         | '\x00' -> Pkh ((module Ed25519), chop s)
         | '\x01' -> Pkh ((module Secp256k1), chop s)
         | '\x02' -> Pkh ((module P256), chop s)
@@ -422,9 +420,12 @@ module Address = struct
             Format.kasprintf failwith
               "Address/TZ 2nd magic number not recognized: %S"
               (Bytes.to_string s) )
-    | _ ->
+    | _ when lgth = 22 ->
         Format.kasprintf failwith "Address 1st magic number not recognized: %S"
           (Bytes.to_string s)
+    | _ ->
+        Format.kasprintf failwith "Address length not recognized: %S (%d)"
+          (Bytes.to_string s) lgth
 
   let to_base58 = function
     | Kt1 s -> Kt1_address.encode s
