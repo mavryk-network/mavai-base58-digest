@@ -22,4 +22,9 @@ module String = struct
       ; "oogrVcyHWq5YzaM4nfZbsJcqJGEMcbAqsRrvKt9onvmuJ8Aj71y"
       ; "exprv7Y3jmbfDJXZJimPNvHGoFThweNRYSoxqeS1HzGmSHXkhX6hhK"
       ; "BLQLKQxVtrQFDem6M2xgiPtM5EtuXdnmfj9V3TvPevyn4e7rzb1" ]
+
+  module No_checksum = struct
+    let to_base58 s : base58 = Base58.raw_encode s
+    let of_base58 s = Base58.raw_decode s
+  end
 end
