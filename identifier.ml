@@ -26,7 +26,11 @@ struct
   let decode s =
     let whole = Raw.String.of_base58 s in
     let prelen = String.length prefix in
-    String.sub whole ~pos:prelen ~len:(String.length whole - prelen)
+    if String.equal prefix (String.sub whole ~pos:0 ~len:prelen) then
+      String.sub whole ~pos:prelen ~len:(String.length whole - prelen)
+    else
+      Format.kasprintf failwith "decode: wrong prefix %S Vs %S" prefix
+        (String.sub whole ~pos:0 ~len:prelen)
 end
 
 module Base58_hash (Parameters : sig
@@ -192,6 +196,17 @@ module Protocol_hash = struct
   end)
 end
 
+module type Signer = sig
+  module Secret_key : Base58_identifier
+  module Public_key : Base58_identifier
+
+  module Public_key_hash : sig
+    include Base58_hash_identifier
+  end
+
+  module Signature : Base58_identifier
+end
+
 module Ed25519 = struct
   module Secret_key = struct
     include Base58_prefixed (struct let prefix = Prefix.ed25519_seed end)
@@ -210,4 +225,286 @@ module Ed25519 = struct
   module Signature = struct
     include Base58_prefixed (struct let prefix = Prefix.ed25519_signature end)
   end
+end
+
+module Secp256k1 = struct
+  module Secret_key = struct
+    include Base58_prefixed (struct
+      let prefix = Prefix.secp256k1_secret_key
+    end)
+  end
+
+  module Public_key = struct
+    include Base58_prefixed (struct
+      let prefix = Prefix.secp256k1_public_key
+    end)
+  end
+
+  module Public_key_hash = struct
+    include Base58_hash (struct
+      let prefix = Prefix.secp256k1_public_key_hash let size = 20
+    end)
+  end
+
+  module Signature = struct
+    include Base58_prefixed (struct let prefix = Prefix.secp256k1_signature end)
+  end
+
+  let%expect_test _ =
+    let open Printf in
+    let module M = struct
+      module type Codec = sig
+        val encode : string -> string val decode : string -> string
+      end
+    end in
+    let print_check_0 (module C : M.Codec) s =
+      let d = C.decode s in
+      let e = C.encode d in
+      assert (String.equal s e) ;
+      printf "->%S\n->%s\n" d e in
+    print_check_0
+      (module Public_key_hash)
+      "tz2SNzXqBQRgyaUSnW5LrKkGKs9EyiRnbQXT" ;
+    [%expect
+      {|
+        ->"\198(\"!\246a\003:\004\156\029D\179\202\025\240\247\192;\149"
+        ->tz2SNzXqBQRgyaUSnW5LrKkGKs9EyiRnbQXT |}] ;
+    print_check_0
+      (module Public_key)
+      "sppk7asaMpcW2Sqo4iftKn5bXYcsqyJ9CktTuqPss2oCWkbB9QHTrjR" ;
+    [%expect
+      {|
+        ->"\002\206}bP\180\226\206\173\004\146\023I\202\186\r\154\0007\160V\004\198\161\162U\016\136\242\225\006\2455"
+        ->sppk7asaMpcW2Sqo4iftKn5bXYcsqyJ9CktTuqPss2oCWkbB9QHTrjR |}] ;
+    print_check_0
+      (module Secret_key)
+      "spsk1qg2jd5SBa2TyiUT3jERCD95bdSuuhJAt75ZYrzRC1VnWb3tg7" ;
+    [%expect
+      {|
+        ->"6\190V>,\205$\203\128-p\"\138\197M4w\2177\161*\219\017O\227\255\243\134\165\007\211\232"
+        ->spsk1qg2jd5SBa2TyiUT3jERCD95bdSuuhJAt75ZYrzRC1VnWb3tg7 |}] ;
+    ()
+end
+
+module P256 = struct
+  module Secret_key = struct
+    include Base58_prefixed (struct let prefix = Prefix.p256_secret_key end)
+  end
+
+  module Public_key = struct
+    include Base58_prefixed (struct let prefix = Prefix.p256_public_key end)
+  end
+
+  module Public_key_hash = struct
+    include Base58_hash (struct
+      let prefix = Prefix.p256_public_key_hash let size = 20
+    end)
+  end
+
+  module Signature = struct
+    include Base58_prefixed (struct let prefix = Prefix.p256_signature end)
+  end
+
+  let%expect_test _ =
+    let open Printf in
+    let module M = struct
+      module type Codec = sig
+        val encode : string -> string val decode : string -> string
+      end
+    end in
+    let print_check_0 (module C : M.Codec) s =
+      let d = C.decode s in
+      let e = C.encode d in
+      assert (String.equal s e) ;
+      printf "->%S\n->%s\n" d e in
+    print_check_0
+      (module Public_key_hash)
+      "tz3P8xF6hbjXw1SUY5gT3yYvLY5gQfZbhEpP" ;
+    [%expect
+      {|
+        ->"\030\207QP\192\163\200J\\\157EE\157\144M\170(\164e\161"
+        ->tz3P8xF6hbjXw1SUY5gT3yYvLY5gQfZbhEpP |}] ;
+    print_check_0
+      (module Public_key)
+      "p2pk67zrpWCT1ihu7zyG7p89UN6w8MkYN9mZ8nMZexf6WPVFXQz3BGP" ;
+    [%expect
+      {|
+        ->"\003\195*\135\135:\001\019\020`0\129\233op\224J\019\168r\139:\231\220\215\0266\133\183\1987F\029"
+        ->p2pk67zrpWCT1ihu7zyG7p89UN6w8MkYN9mZ8nMZexf6WPVFXQz3BGP |}] ;
+    print_check_0
+      (module Secret_key)
+      "p2sk2PGjcuzCndQ5WavEB42Mxt2eagzrfivs5vXxycHFNzkobDygcA" ;
+    [%expect
+      {|
+        ->"\005\162xK\183\236\247\145\175'/\176,\191V|A\152\149H\234\235%\167\169\219Zj\rd'\160"
+        ->p2sk2PGjcuzCndQ5WavEB42Mxt2eagzrfivs5vXxycHFNzkobDygcA |}] ;
+    ()
+end
+
+module Generic_signer = struct
+  type 'a t = (module Signer) * 'a
+
+  let all : (module Signer) list =
+    [(module Ed25519); (module Secp256k1); (module P256)]
+
+  module Public_key = struct
+    type nonrec t = string t
+
+    let of_bytes s : t =
+      let lgth = Bytes.length s in
+      let check_lgth n =
+        if lgth <> n then
+          Format.kasprintf failwith
+            "Public_key.of_bytes: length must be %d bytes, not %d." n lgth in
+      let chop s = Bytes.sub_string s 1 (lgth - 1) in
+      match Bytes.get s 0 with
+      | '\x00' ->
+          check_lgth 33 ;
+          ((module Ed25519), chop s)
+      | '\x01' ->
+          check_lgth 34 ;
+          ((module Secp256k1), chop s)
+      | '\x02' ->
+          check_lgth 34 ;
+          ((module P256), chop s)
+      | c ->
+          Format.kasprintf failwith "public key magic number not recognized: %C"
+            c
+
+    let of_base58 (s : Raw.base58) : t =
+      List.find_map all ~f:(fun (module Sg : Signer) ->
+          match Sg.Public_key.decode s with
+          | s -> Some ((module Sg : Signer), s)
+          | exception _ -> None )
+      |> function
+      | Some s -> s
+      | None ->
+          Format.kasprintf failwith "Public_key.of_base58: could not decode %S"
+            s
+
+    let to_base58 (((module Sg), pk) : t) : Raw.base58 = Sg.Public_key.encode pk
+
+    let%expect_test _ =
+      let open Printf in
+      let bytes_of_hex s =
+        let rec go b = function
+          | "" -> Buffer.to_bytes b
+          | more ->
+              Scanf.sscanf more "%02x%s" (fun code more ->
+                  Buffer.add_int8 b code ; go b more ) in
+        go (Buffer.create 40) s in
+      let print_check_0 hex =
+        let e = to_base58 (of_bytes (bytes_of_hex hex)) in
+        printf "->0x%s\n->%s\n" hex e in
+      print_check_0
+        "00d670f72efd9475b62275fae773eb5f5eb1fea4f2a0880e6d21983273bf95a0af" ;
+      [%expect
+        {|
+        ->0x00d670f72efd9475b62275fae773eb5f5eb1fea4f2a0880e6d21983273bf95a0af
+        ->edpkvGfYw3LyB1UcCahKQk4rF2tvbMUk8GFiTuMjL75uGXrpvKXhjn |}] ;
+      print_check_0
+        "010227ad543e5213d44e3e1595e5c43e308a05a1c9f816d1a870631a43418d606159" ;
+      [%expect
+        {|
+        ->0x010227ad543e5213d44e3e1595e5c43e308a05a1c9f816d1a870631a43418d606159
+        ->sppk7Zc7MRN3zTXEZ5QVp7yWcM2YhVyRUQqfBhxA25Ebxz3wbiuA1qa |}] ;
+      print_check_0
+        "02022ca01ff53a224ced334a41979f96b97c307f951ffdea36433ee24b5fc6a9588e" ;
+      [%expect
+        {|
+        ->0x02022ca01ff53a224ced334a41979f96b97c307f951ffdea36433ee24b5fc6a9588e
+        ->p2pk64upHUAeH6wNh5BgwTrnVVM6aU9zbSdmgoeDVkax46d8T4C7MsC |}] ;
+      ()
+  end
+
+  module Public_key_hash = struct
+    type nonrec t = string t
+
+    let of_public_key (((module Sg), pk) : Public_key.t) : t =
+      ((module Sg : Signer), Sg.Public_key_hash.hash_string pk)
+
+    let to_base58 (((module Sg), pkh) : t) : Raw.base58 =
+      Sg.Public_key_hash.encode pkh
+  end
+
+  module Signature = struct
+    type nonrec t = string t
+
+    let of_base58 (s : Raw.base58) : t =
+      List.find_map all ~f:(fun (module Sg : Signer) ->
+          match Sg.Signature.decode s with
+          | s -> Some ((module Sg : Signer), s)
+          | exception _ -> None )
+      |> function
+      | Some s -> s
+      | None ->
+          Format.kasprintf failwith "Signature.of_base58: could not decode %S" s
+
+    let to_bytes : t -> string = fun (_, s) -> s
+  end
+end
+
+module Address = struct
+  type t = Kt1 of string | Pkh of Generic_signer.Public_key_hash.t
+
+  let of_bytes s : t =
+    (* See ["./tezos-codec describe alpha.contract binary schema"] *)
+    let lgth = Bytes.length s in
+    match Bytes.get s 0 with
+    | '\x01' when lgth = 22 ->
+        Kt1 (Bytes.sub_string s 1 (lgth - 2) (* <- the padding is at the end *))
+    | '\x00' when lgth = 22 -> (
+        let chop s = Bytes.sub_string s 2 (Bytes.length s - 2) in
+        match Bytes.get s 1 with
+        | '\x00' -> Pkh ((module Ed25519), chop s)
+        | '\x01' -> Pkh ((module Secp256k1), chop s)
+        | '\x02' -> Pkh ((module P256), chop s)
+        | _ ->
+            Format.kasprintf failwith
+              "Address/TZ 2nd magic number not recognized: %S"
+              (Bytes.to_string s) )
+    | _ when lgth = 22 ->
+        Format.kasprintf failwith "Address 1st magic number not recognized: %S"
+          (Bytes.to_string s)
+    | _ ->
+        Format.kasprintf failwith "Address length not recognized: %S (%d)"
+          (Bytes.to_string s) lgth
+
+  let to_base58 = function
+    | Kt1 s -> Kt1_address.encode s
+    | Pkh pkh -> Generic_signer.Public_key_hash.to_base58 pkh
+
+  let%expect_test _ =
+    let open Printf in
+    let bytes_of_hex s =
+      let rec go b = function
+        | "" -> Buffer.to_bytes b
+        | more ->
+            Scanf.sscanf more "%02x%s" (fun code more ->
+                Buffer.add_int8 b code ; go b more ) in
+      go (Buffer.create 40) s in
+    let print_check_0 hex =
+      let e = to_base58 (of_bytes (bytes_of_hex hex)) in
+      printf "->0x%s\n->%s\n" hex e in
+    print_check_0 "00006ca63af795024a42b1b1875b24c2fc7f4376b23c" ;
+    [%expect
+      {|
+        ->0x00006ca63af795024a42b1b1875b24c2fc7f4376b23c
+        ->tz1VYWoiunmeTe2CN7LZigbERFfekrtymKoy |}] ;
+    print_check_0 "0001c6282221f661033a049c1d44b3ca19f0f7c03b95" ;
+    [%expect
+      {|
+        ->0x0001c6282221f661033a049c1d44b3ca19f0f7c03b95
+        ->tz2SNzXqBQRgyaUSnW5LrKkGKs9EyiRnbQXT |}] ;
+    print_check_0 "0002798a0ad8e4956c6afba177f19ae41b6b169a6145" ;
+    [%expect
+      {|
+        ->0x0002798a0ad8e4956c6afba177f19ae41b6b169a6145
+        ->tz3XQgkE3jTFP9RhadxKHW6LZmiGqiN95uWy |}] ;
+    print_check_0 "01bc547d8187e0bc39ea403195ebb3cd1ef5a1849d00" ;
+    [%expect
+      {|
+        ->0x01bc547d8187e0bc39ea403195ebb3cd1ef5a1849d00
+        ->KT1RkZpKFkwjWTRL4Vyqnwpzh83q6ipi6zvT |}] ;
+    ()
 end

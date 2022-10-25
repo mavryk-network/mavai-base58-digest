@@ -154,3 +154,4 @@ module Set : Set.S with type elt := t
 module Map : Map.S with type key := t
 
 val raw_encode : ?alphabet:Alphabet.t -> string -> string
+val raw_decode : ?alphabet:Alphabet.t -> string -> string

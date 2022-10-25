@@ -35,7 +35,7 @@ module Kt1_address : sig
   val of_base58_operation_hash : ?index:int32 -> Raw.base58 -> Raw.base58
 end
 
-module Ed25519 : sig
+module type Signer = sig
   module Secret_key : Base58_identifier
   module Public_key : Base58_identifier
 
@@ -44,4 +44,41 @@ module Ed25519 : sig
   end
 
   module Signature : Base58_identifier
+end
+
+module Ed25519 : Signer
+module Secp256k1 : Signer
+module P256 : Signer
+
+module Generic_signer : sig
+  val all : (module Signer) list
+
+  module Public_key : sig
+    type t
+
+    val of_bytes : bytes -> t
+    val of_base58 : Raw.base58 -> t
+    val to_base58 : t -> Raw.base58
+  end
+
+  module Public_key_hash : sig
+    type t
+
+    val of_public_key : Public_key.t -> t
+    val to_base58 : t -> string
+  end
+
+  module Signature : sig
+    type t
+
+    val of_base58 : Raw.base58 -> t
+    val to_bytes : t -> string
+  end
+end
+
+module Address : sig
+  type t = Kt1 of string | Pkh of Generic_signer.Public_key_hash.t
+
+  val of_bytes : bytes -> t
+  val to_base58 : t -> string
 end
