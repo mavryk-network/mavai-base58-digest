@@ -25,10 +25,10 @@ module Alphabet : sig
   (** Return a string containing all the characters of that alphabet. *)
 end
 
-type t = [`Base58 of string]
+type t = [ `Base58 of string ]
 
-(** Type of Base58Check encoded data. *)
 type base58 = t
+(** Type of Base58Check encoded data. *)
 
 val compare : t -> t -> int
 val equal : t -> t -> bool
@@ -74,7 +74,7 @@ module Tezos : sig
     | Secret_key
     | Signature
 
-  type t = private {version: version; payload: string}
+  type t = private { version : version; payload : string }
 
   val compare : t -> t -> int
   val equal : t -> t -> bool
@@ -110,7 +110,7 @@ module Bitcoin : sig
     | Testnet_BIP32_pub
     | Unknown of string
 
-  type t = private {version: version; payload: string}
+  type t = private { version : version; payload : string }
 
   val compare : t -> t -> int
   val equal : t -> t -> bool
@@ -131,7 +131,7 @@ end
 
 module Komodo : sig
   type version = P2PKH | P2SH | WIF
-  type t = private {version: version; payload: string}
+  type t = private { version : version; payload : string }
 
   val compare : t -> t -> int
   val equal : t -> t -> bool
