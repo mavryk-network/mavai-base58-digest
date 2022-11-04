@@ -15,11 +15,11 @@ let base = 58
 let zbase = Z.of_int base
 
 module Alphabet = struct
-  type t = {encode: string; decode: string}
+  type t = { encode : string; decode : string }
 
   let make alphabet =
     if String.length alphabet <> base then
-      invalid_arg "Base58: invalid alphabet (length)" ;
+      invalid_arg "Base58: invalid alphabet (length)";
     let str = Bytes.make 256 '\255' in
     for i = 0 to String.length alphabet - 1 do
       let char = int_of_char alphabet.[i] in
@@ -27,10 +27,10 @@ module Alphabet = struct
         Format.kasprintf invalid_arg "Base58: invalid alphabet (dup '%c' %d %d)"
           (char_of_int char)
           (int_of_char @@ Bytes.get str char)
-          i ;
+          i;
       Bytes.set str char (char_of_int i)
-    done ;
-    {encode= alphabet; decode= Bytes.to_string str}
+    done;
+    { encode = alphabet; decode = Bytes.to_string str }
 
   let bitcoin =
     make "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
@@ -46,7 +46,8 @@ let count_trailing_char s c =
   let rec loop i =
     if i < 0 then len
     else if String.get s i <> c then len - i - 1
-    else loop (i - 1) in
+    else loop (i - 1)
+  in
   loop (len - 1)
 
 let count_leading_char s c =
@@ -58,7 +59,7 @@ let count_leading_char s c =
 
 let of_char ?(alphabet = Alphabet.default) x =
   let pos = String.get alphabet.decode (int_of_char x) in
-  if pos = '\255' then failwith "Invalid data" ;
+  if pos = '\255' then failwith "Invalid data";
   int_of_char pos
 
 let to_char ?(alphabet = Alphabet.default) x = alphabet.encode.[x]
@@ -76,8 +77,9 @@ let raw_encode ?(alphabet = Alphabet.default) s =
     else
       let s, r = Z.div_rem s zbase in
       let i = loop s in
-      Bytes.set res i (to_char ~alphabet (Z.to_int r)) ;
-      i + 1 in
+      Bytes.set res i (to_char ~alphabet (Z.to_int r));
+      i + 1
+  in
   let i = loop s in
   let res = Bytes.sub_string res 0 i in
   String.make zeros zero ^ res
@@ -91,7 +93,8 @@ let raw_decode ?(alphabet = Alphabet.default) s =
     else
       let x = Z.of_int (of_char ~alphabet (String.get s i)) in
       let res = Z.(add x (mul res zbase)) in
-      loop res (i + 1) in
+      loop res (i + 1)
+  in
   let res = Z.to_bits @@ loop Z.zero zeros in
   let res_tzeros = count_trailing_char res '\000' in
   let len = String.length res - res_tzeros in
@@ -102,10 +105,10 @@ let checksum c s =
   let module Crypto = (val c : CRYPTO) in
   let hash = Crypto.(sha256 (sha256 s)) in
   let res = Bytes.make 4 '\000' in
-  Bytes.blit_string hash 0 res 0 4 ;
+  Bytes.blit_string hash 0 res 0 4;
   Bytes.unsafe_to_string res
 
-type t = [`Base58 of string]
+type t = [ `Base58 of string ]
 type base58 = t
 
 let compare (`Base58 t) (`Base58 t') = String.compare t t'
@@ -143,15 +146,13 @@ let show = to_string
 
 let chars_of_string str =
   let chars = ref [] in
-  StringLabels.iter str ~f:(fun c -> chars := c :: !chars) ;
+  StringLabels.iter str ~f:(fun c -> chars := c :: !chars);
   List.rev !chars
 
 module Tezos = struct
   (* 32 *)
   let block_hash = "\001\052" (* B(51) *)
-
   let operation_hash = "\005\116" (* o(51) *)
-
   let protocol_hash = "\002\170" (* P(51) *)
 
   (* 20 *)
@@ -165,7 +166,6 @@ module Tezos = struct
 
   (* 64 *)
   let ed25519_secret_key = "\043\246\078\007" (* edsk(98) *)
-
   let ed25519_signature = "\009\245\205\134\018" (* edsig(99) *)
 
   type version =
@@ -178,9 +178,9 @@ module Tezos = struct
     | Secret_key
     | Signature
 
-  type t = {version: version; payload: string}
+  type t = { version : version; payload : string }
 
-  let compare {version= v1; payload= p1} {version= v2; payload= p2} =
+  let compare { version = v1; payload = p1 } { version = v2; payload = p2 } =
     if v1 > v2 then 1 else if v1 < v2 then -1 else String.compare p1 p2
 
   let equal t t' = Stdlib.( = ) t t'
@@ -191,27 +191,27 @@ module Tezos = struct
     with _ ->
       invalid_arg
         (Printf.sprintf "Tezos.of_bytes: %s must be %d bytes long" error_msg
-           (len - start) )
+           (len - start))
 
   let t_of_bytes bytes =
-    if String.length bytes < 2 then invalid_arg "Tezos.of_bytes: str < 2" ;
+    if String.length bytes < 2 then invalid_arg "Tezos.of_bytes: str < 2";
     match chars_of_string bytes with
     | '\001' :: '\052' :: _ ->
-        {version= Block; payload= sub_or_fail bytes 2 32 "block"}
+        { version = Block; payload = sub_or_fail bytes 2 32 "block" }
     | '\005' :: '\116' :: _ ->
-        {version= Operation; payload= sub_or_fail bytes 2 32 "operation"}
+        { version = Operation; payload = sub_or_fail bytes 2 32 "operation" }
     | '\002' :: '\170' :: _ ->
-        {version= Protocol; payload= sub_or_fail bytes 2 32 "protocol"}
+        { version = Protocol; payload = sub_or_fail bytes 2 32 "protocol" }
     | '\006' :: '\161' :: '\159' :: _ ->
-        {version= Address; payload= sub_or_fail bytes 3 20 "address"}
+        { version = Address; payload = sub_or_fail bytes 3 20 "address" }
     | '\153' :: '\103' :: _ ->
-        {version= Peer; payload= sub_or_fail bytes 2 16 "peer"}
+        { version = Peer; payload = sub_or_fail bytes 2 16 "peer" }
     | '\013' :: '\015' :: '\037' :: '\217' :: _ ->
-        {version= Public_key; payload= sub_or_fail bytes 4 32 "public_key"}
+        { version = Public_key; payload = sub_or_fail bytes 4 32 "public_key" }
     | '\043' :: '\246' :: '\078' :: '\007' :: _ ->
-        {version= Secret_key; payload= sub_or_fail bytes 4 64 "secret_key"}
+        { version = Secret_key; payload = sub_or_fail bytes 4 64 "secret_key" }
     | '\009' :: '\245' :: '\205' :: '\134' :: '\018' :: _ ->
-        {version= Signature; payload= sub_or_fail bytes 5 64 "signature"}
+        { version = Signature; payload = sub_or_fail bytes 5 64 "signature" }
     | _ -> invalid_arg "Tezos.of_bytes: unknown prefix"
 
   let string_of_version = function
@@ -224,19 +224,19 @@ module Tezos = struct
     | Secret_key -> ed25519_secret_key
     | Signature -> ed25519_signature
 
-  let create ~version ~payload = {version; payload}
+  let create ~version ~payload = { version; payload }
 
   let of_base58 c b58 =
     match to_bytes c b58 with
     | None -> None
-    | Some bytes -> ( try Some (t_of_bytes bytes) with _ -> None )
+    | Some bytes -> ( try Some (t_of_bytes bytes) with _ -> None)
 
   let of_base58_exn c b58 =
     match to_bytes c b58 with
     | None -> invalid_arg "Tezos.of_base58_exn: not base58 data"
     | Some bytes -> t_of_bytes bytes
 
-  let to_base58 c {version; payload} =
+  let to_base58 c { version; payload } =
     of_bytes c (string_of_version version ^ payload)
 
   let of_string c str =
@@ -312,23 +312,23 @@ module Bitcoin = struct
         (Testnet_BIP32_pub, String.sub s 4 (len - 4))
     | _ -> invalid_arg "Base58.Bitcoin.t_of_bytes: unknown version"
 
-  type t = {version: version; payload: string}
+  type t = { version : version; payload : string }
 
-  let compare {version= v1; payload= p1} {version= v2; payload= p2} =
+  let compare { version = v1; payload = p1 } { version = v2; payload = p2 } =
     if v1 > v2 then 1 else if v1 < v2 then -1 else String.compare p1 p2
 
   let equal t t' = Stdlib.( = ) t t'
   let ( = ) = equal
-  let create ~version ~payload = {version; payload}
+  let create ~version ~payload = { version; payload }
 
   let of_base58_exn c b58 =
     let bytes = to_bytes_exn c b58 in
     let version, payload = t_of_bytes bytes in
-    {version; payload}
+    { version; payload }
 
   let of_base58 c b58 = try Some (of_base58_exn c b58) with _ -> None
 
-  let to_base58 c {version; payload} =
+  let to_base58 c { version; payload } =
     of_bytes c (string_of_version version ^ payload)
 
   let of_string c str =
@@ -372,23 +372,23 @@ module Komodo = struct
     | '\128' :: _ -> (WIF, String.sub s 1 (len - 1))
     | _ -> invalid_arg "Komodo.version_of_string_exn"
 
-  type t = {version: version; payload: string}
+  type t = { version : version; payload : string }
 
-  let compare {version= v1; payload= p1} {version= v2; payload= p2} =
+  let compare { version = v1; payload = p1 } { version = v2; payload = p2 } =
     if v1 > v2 then 1 else if v1 < v2 then -1 else String.compare p1 p2
 
   let equal t t' = Stdlib.( = ) t t'
   let ( = ) = equal
-  let create ~version ~payload = {version; payload}
+  let create ~version ~payload = { version; payload }
 
   let of_base58_exn c b58 =
     let bytes = to_bytes_exn c b58 in
     let version, payload = version_of_bytes_exn bytes in
-    {version; payload}
+    { version; payload }
 
   let of_base58 c b58 = try Some (of_base58_exn c b58) with _ -> None
 
-  let to_base58 c {version; payload} =
+  let to_base58 c { version; payload } =
     of_bytes c (string_of_version version ^ payload)
 
   let of_string c str =
