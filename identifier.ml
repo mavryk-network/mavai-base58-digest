@@ -144,7 +144,7 @@ module Chain_id = struct
     print_check "Psithaca";
     [%expect
       {|
-        KO: Cannot decode base58 from "Psithaca" (Exception: (Invalid_argument Base58.of_string_exn)) |}];
+        KO: Cannot decode base58 from "Psithaca" (Exception: Invalid_argument("Base58.of_string_exn")) |}];
     print_check "PsiThaCaT47Zboaw71QWScM8sXeMM7bbQFncK9FLqYc6EKdpjVP";
     [%expect
       {|
