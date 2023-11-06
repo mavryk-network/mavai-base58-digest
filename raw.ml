@@ -18,7 +18,7 @@ module String = struct
     let check v = String.equal v (of_base58 v |> to_base58) in
     List.for_all check
       [
-        "tz1SebmhV9P6pKfx7otPpdECdqY2JPZYB5gM";
+        "mv1E2Y8khTrfaRUeErWUBfg6G7zNMKnM4JJL";
         "KT1QjUt6TyeV4EMYdouBMyvUiK4JjQJyY1EK";
         "oogrVcyHWq5YzaM4nfZbsJcqJGEMcbAqsRrvKt9onvmuJ8Aj71y";
         "exprv7Y3jmbfDJXZJimPNvHGoFThweNRYSoxqeS1HzGmSHXkhX6hhK";

@@ -61,9 +61,9 @@ val of_string_exn : ?alphabet:Alphabet.t -> (module CRYPTO) -> string -> t
 val to_string : t -> string
 (** [to_string [`Base58 b58] is [b58]. *)
 
-(** {1 Tezos prefixes} *)
+(** {1 Mavryk prefixes} *)
 
-module Tezos : sig
+module Mavryk : sig
   type version =
     | Block
     | Operation

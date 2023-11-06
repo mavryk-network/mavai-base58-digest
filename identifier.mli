@@ -1,4 +1,4 @@
-(** Tezos common identifiers. *)
+(** Mavryks common identifiers. *)
 
 module type Base58_identifier = sig
   val prefix : string

@@ -1,14 +1,14 @@
-# tezai-base58-digest
+# mavai-base58-digest
 
-> _Tezos Base58 hash-encodings based on Digestif_
+> _Mavryk Base58 hash-encodings based on Digestif_
 
-Tezos Base58 hash-encodings, including common prefixes, based on the Digestif library (Js-of-OCaml compliant).
+Mavryk Base58 hash-encodings, including common prefixes, based on the Digestif library (Js-of-OCaml compliant).
 
 This project is mostly developed in a monorepo at <https://gitlab.com/oxheadalpha/flextesa-tzcomet-monorepo/>.
 
 ## Install
 
 ```sh
-opam exec -- opam install --with-test --with-doc tezai-base58-digest.opam
+opam exec -- opam install --with-test --with-doc mavai-base58-digest.opam
 ```
 

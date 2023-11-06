@@ -1,4 +1,4 @@
-(** Tezos' common hash functions as [string -> string] OCaml functions. *)
+(** Mavryk' common hash functions as [string -> string] OCaml functions. *)
 module String : sig
   val sha256 : string -> string
   val sha512 : string -> string

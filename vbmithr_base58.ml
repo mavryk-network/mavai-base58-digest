@@ -149,14 +149,14 @@ let chars_of_string str =
   StringLabels.iter str ~f:(fun c -> chars := c :: !chars);
   List.rev !chars
 
-module Tezos = struct
+module Mavryk = struct
   (* 32 *)
   let block_hash = "\001\052" (* B(51) *)
   let operation_hash = "\005\116" (* o(51) *)
   let protocol_hash = "\002\170" (* P(51) *)
 
   (* 20 *)
-  let ed25519_public_key_hash = "\006\161\159" (* tz1(36) *)
+  let ed25519_public_key_hash = "\005\186\196" (* mv1(36) *)
 
   (* 16 *)
   let cryptobox_public_key_hash = "\153\103" (* id(30) *)
@@ -190,11 +190,11 @@ module Tezos = struct
     try String.sub str start len
     with _ ->
       invalid_arg
-        (Printf.sprintf "Tezos.of_bytes: %s must be %d bytes long" error_msg
+        (Printf.sprintf "Mavryk.of_bytes: %s must be %d bytes long" error_msg
            (len - start))
 
   let t_of_bytes bytes =
-    if String.length bytes < 2 then invalid_arg "Tezos.of_bytes: str < 2";
+    if String.length bytes < 2 then invalid_arg "Mavryk.of_bytes: str < 2";
     match chars_of_string bytes with
     | '\001' :: '\052' :: _ ->
         { version = Block; payload = sub_or_fail bytes 2 32 "block" }
@@ -212,7 +212,7 @@ module Tezos = struct
         { version = Secret_key; payload = sub_or_fail bytes 4 64 "secret_key" }
     | '\009' :: '\245' :: '\205' :: '\134' :: '\018' :: _ ->
         { version = Signature; payload = sub_or_fail bytes 5 64 "signature" }
-    | _ -> invalid_arg "Tezos.of_bytes: unknown prefix"
+    | _ -> invalid_arg "Mavryk.of_bytes: unknown prefix"
 
   let string_of_version = function
     | Block -> block_hash
@@ -233,7 +233,7 @@ module Tezos = struct
 
   let of_base58_exn c b58 =
     match to_bytes c b58 with
-    | None -> invalid_arg "Tezos.of_base58_exn: not base58 data"
+    | None -> invalid_arg "Mavryk.of_base58_exn: not base58 data"
     | Some bytes -> t_of_bytes bytes
 
   let to_base58 c { version; payload } =
@@ -244,7 +244,7 @@ module Tezos = struct
 
   let of_string_exn c str =
     match of_string c str with
-    | None -> invalid_arg "Base58.Tezos.of_string_exn"
+    | None -> invalid_arg "Base58.Mavryk.of_string_exn"
     | Some b58 -> b58
 
   let to_string c t = to_string (to_base58 c t)

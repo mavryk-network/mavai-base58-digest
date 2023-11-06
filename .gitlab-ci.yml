@@ -3,5 +3,5 @@ build:
   script:
     - sudo cp /usr/bin/opam-2.1 /usr/bin/opam
     - sudo apk update
-    - opam exec -- opam install --with-test --with-doc ./tezai-base58-digest.opam
+    - opam exec -- opam install --with-test --with-doc ./mavai-base58-digest.opam
 

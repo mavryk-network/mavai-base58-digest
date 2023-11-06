@@ -11,9 +11,9 @@ let operation_metadata_list_hash = "\134\039" (* Lr(52) *)
 let operation_metadata_list_list_hash = "\029\159\182" (* LLr(53) *)
 
 (* 20 *)
-let ed25519_public_key_hash = "\006\161\159" (* tz1(36) *)
-let secp256k1_public_key_hash = "\006\161\161" (* tz2(36) *)
-let p256_public_key_hash = "\006\161\164" (* tz3(36) *)
+let ed25519_public_key_hash = "\005\186\196" (* mv1(36) *)
+let secp256k1_public_key_hash = "\005\186\199" (* mv2(36) *)
+let p256_public_key_hash = "\005\186\201" (* mv3(36) *)
 
 (* 16 *)
 let cryptobox_public_key_hash = "\153\103" (* id(30) *)

@@ -300,11 +300,11 @@ module Secp256k1 = struct
     in
     print_check_0
       (module Public_key_hash)
-      "tz2SNzXqBQRgyaUSnW5LrKkGKs9EyiRnbQXT";
+      "mv2e64pXo4SE1j574ufcRTvQkfdio3aHvWeV";
     [%expect
       {|
         ->"\198(\"!\246a\003:\004\156\029D\179\202\025\240\247\192;\149"
-        ->tz2SNzXqBQRgyaUSnW5LrKkGKs9EyiRnbQXT |}];
+        ->mv2e64pXo4SE1j574ufcRTvQkfdio3aHvWeV |}];
     print_check_0
       (module Public_key)
       "sppk7asaMpcW2Sqo4iftKn5bXYcsqyJ9CktTuqPss2oCWkbB9QHTrjR";
@@ -364,11 +364,11 @@ module P256 = struct
     in
     print_check_0
       (module Public_key_hash)
-      "tz3P8xF6hbjXw1SUY5gT3yYvLY5gQfZbhEpP";
+      "mv3BWRYh1y2tWHDhgQFJHoEwVYwey42c5mME";
     [%expect
       {|
         ->"\030\207QP\192\163\200J\\\157EE\157\144M\170(\164e\161"
-        ->tz3P8xF6hbjXw1SUY5gT3yYvLY5gQfZbhEpP |}];
+        ->mv3BWRYh1y2tWHDhgQFJHoEwVYwey42c5mME |}];
     print_check_0
       (module Public_key)
       "p2pk67zrpWCT1ihu7zyG7p89UN6w8MkYN9mZ8nMZexf6WPVFXQz3BGP";
@@ -498,7 +498,7 @@ module Address = struct
   type t = Kt1 of string | Pkh of Generic_signer.Public_key_hash.t
 
   let of_bytes s : t =
-    (* See ["./tezos-codec describe alpha.contract binary schema"] *)
+    (* See ["./mavryk-codec describe alpha.contract binary schema"] *)
     let lgth = Bytes.length s in
     match Bytes.get s 0 with
     | '\x01' when lgth = 22 ->
@@ -549,7 +549,7 @@ module Address = struct
     [%expect
       {|
         ->0x0001c6282221f661033a049c1d44b3ca19f0f7c03b95
-        ->tz2SNzXqBQRgyaUSnW5LrKkGKs9EyiRnbQXT |}];
+        ->mv2e64pXo4SE1j574ufcRTvQkfdio3aHvWeV |}];
     print_check_0 "0002798a0ad8e4956c6afba177f19ae41b6b169a6145";
     [%expect
       {|

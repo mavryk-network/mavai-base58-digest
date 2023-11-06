@@ -1,23 +1,25 @@
 (lang dune 2.9)
 (generate_opam_files true)
-(name tezai-base58-digest)
+(name mavai-base58-digest)
 (package
-  (name tezai-base58-digest)
+  (name mavai-base58-digest)
   (authors
     "Seb Mondet <seb@mondet.org>"
     "Mark Nichols <marklnichols@gmail.com>"
     "Phil Saxton <phillipsaxton@gmail.com>"
     "David Turner <david.turner@oxheadalpha.com>"
+    "Tristan Allaire <tristan@mavryk.io>"
   )
   (maintainers
     "Seb Mondet <seb@mondet.org>"
     "Mark Nichols <marklnichols@gmail.com>"
     "Phil Saxton <phillipsaxton@gmail.com>"
+    "Tristan Allaire <tristan@mavryk.io>"
   )
-  (synopsis "Tezos Base58 hash-encodings based on Digestif")
-  (description "Tezos Base58 hash-encodings, including common prefixes, based on the Digestif library (Js-of-OCaml compliant).")
-  (homepage "https://gitlab.com/oxheadalpha/tezai-base58-digest")
-  (bug_reports "https://gitlab.com/oxheadalpha/tezai-base58-digest/-/issues")
+  (synopsis "Mavryk Base58 hash-encodings based on Digestif")
+  (description "Mavryk Base58 hash-encodings, including common prefixes, based on the Digestif library (Js-of-OCaml compliant).")
+  (homepage "https://gitlab.com/mavryk-network/mavai-base-58-digest")
+  (bug_reports "https://gitlab.com/mavryk-network/mavai-base-58-digest/-/issues")
   (license "MIT")
   (depends
     (digestif (>= "0.9.0"))
